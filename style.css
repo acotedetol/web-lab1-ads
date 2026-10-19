@@ -1,0 +1,403 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Montserrat', sans-serif;
+}
+
+body {
+  background-color: #FAFAFA;
+  color: #1A1A1A;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== ШАПКА ========== */
+.header {
+  background-color: #fff;
+  border-bottom: 1px solid #EAEAEA;
+}
+
+.header__container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header__logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  text-decoration: none;
+}
+
+.header__nav {
+  display: flex;
+  gap: 24px;
+}
+
+.header__link {
+  text-decoration: none;
+  color: #000;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.header__link:hover {
+  color: #FF007A;
+}
+
+/* ========== ОСНОВНОЙ КОНТЕНТ ========== */
+.main {
+  flex: 1;
+  padding: 24px 20px;
+}
+
+.main__container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.main__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.main__title {
+  font-size: 32px;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: #FF007A;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #E0006C;
+}
+
+.plus {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ========== СЕТКА КАРТОЧЕК ========== */
+.ads-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px 16px;
+  margin-bottom: 32px;
+}
+
+.ad-card {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.ad-card__img-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background-color: #F3F3F3;
+  overflow: hidden;
+}
+
+.ad-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ad-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ad-card__price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
+}
+
+.ad-card__title {
+  font-size: 12px;
+  color: #8C8C8C;
+  line-height: 1.3;
+}
+
+.btn-load-more {
+  width: 100%;
+  padding: 12px;
+  background-color: transparent;
+  border: 1px solid #FF007A;
+  color: #FF007A;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-load-more:hover {
+  background-color: #FFF0F7;
+}
+
+/* ========== ПОДВАЛ ========== */
+.footer {
+  background-color: #fff;
+  border-top: 1px solid #EAEAEA;
+  padding: 20px 0;
+  margin-top: auto;
+}
+
+.footer__container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.footer__email {
+  color: #FF007A;
+  text-decoration: none;
+}
+
+.footer__link {
+  color: #8C8C8C;
+  text-decoration: none;
+}
+
+/* ========== МОДАЛЬНОЕ ОКНО ========== */
+.modal {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal__overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal__content {
+  position: relative;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-20px);
+  transition: transform 0.3s;
+}
+
+.modal.active .modal__content {
+  transform: translateY(0);
+}
+
+.modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #8C8C8C;
+}
+
+.modal__tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: baseline;
+}
+
+.modal__tab {
+  background: none;
+  border: none;
+  font-size: 22px;
+  font-weight: 500;
+  color: #B0B0B0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal__tab.active {
+  color: #000;
+}
+
+/* ========== ФОРМЫ ========== */
+.hidden {
+  display: none !important;
+}
+
+.form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form__group {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form__group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #D9D9D9;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form__group input:focus {
+  border-color: #FF007A;
+}
+
+.form__group input.error {
+  border-color: #e53935;
+  background-color: #FFF5F5; /* Легкий красноватый фон для ошибочного поля */
+}
+
+/* Вот тут мы делаем текст ошибки заметным */
+.form__error {
+  color: #e53935;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+  min-height: 14px; /* Чтобы верстка не прыгала, когда появляется ошибка */
+  display: block;
+}
+
+.form__group--checkbox {
+  margin-top: 4px;
+  margin-bottom: 20px;
+}
+
+.form__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #1A1A1A;
+  cursor: pointer;
+}
+
+.form__checkbox-label input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #FF007A;
+}
+
+.form__checkbox-label a {
+  color: #FF007A;
+  text-decoration: none;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 12px;
+  background-color: #FFC2E1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-submit:not(:disabled) {
+  background-color: #FF007A;
+}
+
+.btn-submit:not(:disabled):hover {
+  background-color: #E0006C;
+}
+
+.form__note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #8C8C8C;
+  margin-top: 16px;
+}
+
+/* ========== АДАПТИВ ========== */
+@media (max-width: 1200px) {
+  .ads-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 900px) {
+  .ads-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .main__header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .btn-primary { width: 100%; justify-content: center; }
+  .form__row { grid-template-columns: 1fr; }
+  .footer__container { flex-direction: column; gap: 12px; text-align: center; }
+}
+@media (max-width: 600px) {
+  .ads-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 400px) {
+  .ads-grid { grid-template-columns: 1fr; }
+  .modal__content { padding: 24px; }
+}.form__error {
+  display: block !important;
+  color: #e53935 !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  margin-top: 4px !important;
+}
