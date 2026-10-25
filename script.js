@@ -1,190 +1,212 @@
-console.log("Скрипт загружен!");
+'use strict';
 
+/* ===== Элементы ===== */
 const modal = document.getElementById('modal');
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 const loginLink = document.getElementById('login-link');
 const registerLink = document.getElementById('register-link');
-const closeElements = document.querySelectorAll('[data-close]');
+const logoutLink = document.getElementById('logout-link');
+const navGuest = document.getElementById('nav-guest');
+const navUser = document.getElementById('nav-user');
+const userNameEl = document.getElementById('user-name');
 const tabLogin = document.getElementById('tab-login');
 const tabRegister = document.getElementById('tab-register');
-
 const loginBtn = document.getElementById('login-btn');
 const registerBtn = document.getElementById('register-btn');
+const agreeInput = document.getElementById('reg-agree');
+const agreeLabel = document.getElementById('agree-label');
+const phoneInput = document.getElementById('reg-phone');
 
-function showForm(formName) {
-  if (formName === 'login') {
-    loginForm.classList.remove('hidden');
-    registerForm.classList.add('hidden');
-    tabLogin.classList.add('active');
-    tabRegister.classList.remove('active');
-    checkLoginButton();
-  } else {
-    loginForm.classList.add('hidden');
-    registerForm.classList.remove('hidden');
-    tabRegister.classList.add('active');
-    tabLogin.classList.remove('active');
-    checkRegisterButton();
-  }
+/* ===== Модальное окно ===== */
+function showForm(name) {
+  const isLogin = name === 'login';
+  loginForm.classList.toggle('hidden', !isLogin);
+  registerForm.classList.toggle('hidden', isLogin);
+  tabLogin.classList.toggle('active', isLogin);
+  tabRegister.classList.toggle('active', !isLogin);
+  updateButtons();
 }
 
-loginLink.addEventListener('click', function (e) {
-  e.preventDefault();
+function openModal(name) {
+  showForm(name);
   modal.classList.add('active');
-  showForm('login');
-});
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('no-scroll');
+}
 
-registerLink.addEventListener('click', function (e) {
-  e.preventDefault();
-  modal.classList.add('active');
-  showForm('register');
-});
+function closeModal() {
+  modal.classList.remove('active');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('no-scroll');
+}
 
+loginLink.addEventListener('click', (e) => { e.preventDefault(); openModal('login'); });
+registerLink.addEventListener('click', (e) => { e.preventDefault(); openModal('register'); });
 tabLogin.addEventListener('click', () => showForm('login'));
 tabRegister.addEventListener('click', () => showForm('register'));
 
-closeElements.forEach(el => {
-  el.addEventListener('click', () => modal.classList.remove('active'));
+document.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeModal));
+modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
 });
 
-// Функция очистки ошибок
-function clearErrors(form) {
-  form.querySelectorAll('.form__error').forEach(el => el.textContent = '');
-  form.querySelectorAll('input').forEach(el => el.classList.remove('error'));
+/* ===== Состояние пользователя ===== */
+const STORAGE_KEY = 'ads_user';
+function readStorage(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
+}
+function writeStorage(key, value) {
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {}
+}
+let currentUser = readStorage(STORAGE_KEY);
+function renderUser() {
+  const isAuth = Boolean(currentUser);
+  navGuest.classList.toggle('hidden', isAuth);
+  navUser.classList.toggle('hidden', !isAuth);
+  if (isAuth) userNameEl.textContent = currentUser.name || currentUser.email;
+}
+function signIn(user) {
+  currentUser = user;
+  writeStorage(STORAGE_KEY, user);
+  renderUser();
+}
+logoutLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  currentUser = null;
+  writeStorage(STORAGE_KEY, null);
+  renderUser();
+});
+
+/* ===== Ошибки ===== */
+function setError(input, message) {
+  const field = input.closest('.field');
+  field.classList.add('field--error');
+  field.querySelector('label').textContent = message;
+}
+function clearError(input) {
+  const field = input.closest('.field');
+  if (!field || !field.classList.contains('field--error')) return;
+  const label = field.querySelector('label');
+  field.classList.remove('field--error');
+  label.textContent = label.dataset.label;
+}
+function clearAllErrors(form) {
+  form.querySelectorAll('.field input').forEach(clearError);
+  agreeLabel.classList.remove('form__agree--error');
+}
+document.querySelectorAll('.field input').forEach((input) => {
+  input.addEventListener('input', () => clearError(input));
+});
+
+/* ===== Валидация ===== */
+function applyCustomRules(input) {
+  input.setCustomValidity('');
+  if (input.form !== registerForm || !input.value) return;
+  if (input.name === 'password' && /^\d+$/.test(input.value)) {
+    input.setCustomValidity(input.dataset.invalid);
+  }
+  if (input.name === 'passwordRepeat' && input.value !== registerForm.elements.password.value) {
+    input.setCustomValidity(input.dataset.invalid);
+  }
+}
+function validateField(input) {
+  applyCustomRules(input);
+  if (input.checkValidity()) return true;
+  const { valueMissing } = input.validity;
+  setError(input, valueMissing ? input.dataset.required : input.dataset.invalid);
+  return false;
+}
+function validateForm(form) {
+  clearAllErrors(form);
+  const results = [...form.querySelectorAll('.field input')].map(validateField);
+  if (form === registerForm && !agreeInput.checkValidity()) {
+    agreeLabel.classList.add('form__agree--error');
+    results.push(false);
+  }
+  return results.every(Boolean);
 }
 
-// Функция, которая красит рамку И вставляет текст напрямую
-function markError(input, errorElementId, message) {
-  input.classList.add('error');
+/* ===== Кнопки ===== */
+function updateButtons() {
+  const loginEmail = loginForm.elements.email.value.trim();
+  const loginPass = loginForm.elements.password.value;
+  loginBtn.disabled = !(loginEmail && loginPass);
+
+  const regName = registerForm.elements.name.value.trim();
+  const regEmail = registerForm.elements.email.value.trim();
+  const regPhone = registerForm.elements.phone.value.trim();
+  const regPass = registerForm.elements.password.value;
+  const regRepeat = registerForm.elements.passwordRepeat.value;
   
-  // Ищем элемент ошибки прямо внутри родителя этого инпута
-  const parent = input.closest('.form__group');
-  if (parent) {
-    const errorEl = parent.querySelector('.form__error');
-    if (errorEl) {
-      errorEl.textContent = message; // Вставляем текст
-      errorEl.style.display = 'block'; // Принудительно показываем
-      errorEl.style.color = '#e53935'; // Принудительно красим в красный
-    }
+  registerBtn.disabled = !(regName && regEmail && regPhone && regPass && regRepeat && agreeInput.checked);
+}
+
+loginForm.addEventListener('input', updateButtons);
+registerForm.addEventListener('input', updateButtons);
+agreeInput.addEventListener('change', () => {
+  if (agreeInput.checked) agreeLabel.classList.remove('form__agree--error');
+  updateButtons();
+});
+
+/* ===== УМНАЯ МАСКА (Просто пробелы между ТВОИМИ цифрами) ===== */
+phoneInput.addEventListener('input', () => {
+  // Берем только цифры, которые ввел пользователь (убираем всё остальное)
+  const digits = phoneInput.value.replace(/\D/g, '');
+  
+  if (!digits) {
+    phoneInput.value = '';
+    return;
   }
-}
 
-function checkLoginButton() {
-  const email = document.getElementById('login-email').value.trim();
-  const pwd = document.getElementById('login-password').value;
-  loginBtn.disabled = !(email && pwd);
-}
+  // Разделяем пробелами: первые 1 цифра, потом по 3, потом по 2, потом по 2
+  let out = '';
+  if (digits.length > 0) out += digits.substring(0, 1);
+  if (digits.length > 1) out += ' ' + digits.substring(1, 4);
+  if (digits.length > 4) out += ' ' + digits.substring(4, 7);
+  if (digits.length > 7) out += ' ' + digits.substring(7, 9);
+  if (digits.length > 9) out += ' ' + digits.substring(9, 11);
 
-function checkRegisterButton() {
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const phone = document.getElementById('reg-phone').value.trim();
-  const pwd = document.getElementById('reg-password').value;
-  const pwd2 = document.getElementById('reg-password-repeat').value;
-  const agree = document.getElementById('reg-agree').checked;
-
-  registerBtn.disabled = !(name && email && phone && pwd && pwd2 && agree);
-}
-
-document.querySelectorAll('#login-form input').forEach(input => {
-  input.addEventListener('input', checkLoginButton);
-});
-document.querySelectorAll('#register-form input').forEach(input => {
-  input.addEventListener('input', checkRegisterButton);
+  phoneInput.value = out.trim();
 });
 
-loginForm.addEventListener('submit', function (e) {
+/* ===== Отправка ===== */
+function collectData(form) {
+  const data = Object.fromEntries(new FormData(form));
+  ['password', 'passwordRepeat'].forEach((key) => {
+    if (key in data) data[key] = '*'.repeat(data[key].length);
+  });
+  if ('agree' in data) data.agree = true;
+  return data;
+}
+
+loginForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  clearErrors(loginForm);
-
-  const emailInput = loginForm.querySelector('[name="email"]');
-  const passwordInput = loginForm.querySelector('[name="password"]');
-  let isValid = true;
-
-  if (!emailInput.value.trim()) {
-    markError(emailInput, null, 'Введите email');
-    isValid = false;
-  }
-  if (!passwordInput.value) {
-    markError(passwordInput, null, 'Введите пароль');
-    isValid = false;
-  }
-
-  if (isValid) {
-    const data = { email: emailInput.value.trim(), password: passwordInput.value };
-    console.log('Вход:', data);
-    alert('Успешный вход! (данные в консоли)');
-    modal.classList.remove('active');
-    loginForm.reset();
-    checkLoginButton();
-  }
+  if (!validateForm(loginForm)) return;
+  console.log('Вход:', collectData(loginForm));
+  signIn({ email: loginForm.elements.email.value.trim(), name: 'Пользователь' });
+  closeModal();
+  loginForm.reset();
+  updateButtons();
 });
 
-registerForm.addEventListener('submit', function (e) {
+registerForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  clearErrors(registerForm);
-
-  const nameInput = registerForm.querySelector('[name="name"]');
-  const emailInput = registerForm.querySelector('[name="email"]');
-  const phoneInput = registerForm.querySelector('[name="phone"]');
-  const passwordInput = registerForm.querySelector('[name="password"]');
-  const repeatInput = registerForm.querySelector('[name="passwordRepeat"]');
-  const agreeInput = registerForm.querySelector('[name="agree"]');
-  let isValid = true;
-
-  const nameRegex = /^[А-Яа-яЁё\s\-]+$/;
-  if (!nameRegex.test(nameInput.value.trim())) {
-    markError(nameInput, null, 'Только русские буквы');
-    isValid = false;
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(emailInput.value.trim())) {
-    markError(emailInput, null, 'Некорректный email');
-    isValid = false;
-  }
-
-  const phoneClean = phoneInput.value.replace(/\D/g, '');
-  if (phoneClean.length < 10) {
-    markError(phoneInput, null, 'Некорректный номер');
-    isValid = false;
-  }
-
-  const pwd = passwordInput.value;
-  if (pwd.length < 6 || /^\d+$/.test(pwd)) {
-    markError(passwordInput, null, 'Мин. 6 символов (не только цифры)');
-    isValid = false;
-  }
-
-  if (pwd !== repeatInput.value) {
-    markError(repeatInput, null, 'Пароли не совпадают');
-    isValid = false;
-  }
-
-  if (!agreeInput.checked) {
-    const agreeParent = agreeInput.closest('.form__group');
-    if (agreeParent) {
-        const err = agreeParent.querySelector('.form__error');
-        if (err) {
-            err.textContent = 'Необходимо согласие';
-            err.style.display = 'block';
-            err.style.color = '#e53935';
-        }
-    }
-    isValid = false;
-  }
-
-  if (isValid) {
-    const data = {
-      name: nameInput.value.trim(),
-      email: emailInput.value.trim(),
-      phone: phoneInput.value.trim(),
-      password: pwd
-    };
-    console.log('Регистрация:', data);
-    alert('Успешная регистрация! (данные в консоли)');
-    modal.classList.remove('active');
-    registerForm.reset();
-    checkRegisterButton();
-  }
+  if (!validateForm(registerForm)) return;
+  console.log('Регистрация:', collectData(registerForm));
+  signIn({ email: registerForm.elements.email.value.trim(), name: registerForm.elements.name.value.trim() });
+  closeModal();
+  registerForm.reset();
+  updateButtons();
 });
+
+document.querySelector('.btn--more').addEventListener('click', () => {
+  document.querySelector('.ads-grid').classList.add('is-expanded');
+});
+
+renderUser();
+updateButtons();
